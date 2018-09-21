@@ -1,6 +1,6 @@
-﻿namespace UniToLua
+﻿namespace UniLua
 {
-    public class LuaUtil
+    public partial class LuaState
     {
         
     }
