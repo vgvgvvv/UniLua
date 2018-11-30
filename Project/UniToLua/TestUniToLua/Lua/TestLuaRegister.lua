@@ -1,0 +1,2 @@
+﻿
+print(tostring(Test.HHH))

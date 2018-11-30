@@ -75,6 +75,9 @@
     <Compile Include="UniLua\Undump.cs" />
     <Compile Include="UniLua\Util.cs" />
     <Compile Include="UniLua\VM.cs" />
+    <Compile Include="UniToLua\LuaRegister.cs" />
+    <Compile Include="UniToLua\LuaUtil.cs" />
+    <Compile Include="UniToLua\ToLuaGener.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
