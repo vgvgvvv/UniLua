@@ -15,10 +15,11 @@ namespace TestUniToLua
             ULDebug.Log = Console.WriteLine;
             ULDebug.LogError = Console.Error.WriteLine;
 
-            var lusState = new LuaState();
-            lusState.L_OpenLibs();
+            var luaState = new LuaState();
+            luaState.L_OpenLibs();
+            luaState.OpenToLua();
 
-            return lusState;
+            return luaState;
         }
     }
 }

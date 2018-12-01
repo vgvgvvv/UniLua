@@ -51,9 +51,12 @@
   <ItemGroup>
     <Compile Include="Test\TestLuaRegister.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Test\TestUniLua.cs" />
     <Compile Include="Test\Util.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Lua\TestUniLua.lua" />
+    <None Include="Lua\TestLuaRegisterEnum.lua" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

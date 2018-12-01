@@ -1,0 +1,3 @@
+﻿
+
+print(tostring(tolua.preload))
