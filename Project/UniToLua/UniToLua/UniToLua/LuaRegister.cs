@@ -445,19 +445,20 @@ namespace UniLua
                 API.GetMetaTable(1);        //t k v mt
                 while (API.IsTable(-1))
                 {
-                    API.PushString(".set");
-                    API.RawGet(-2);
+                    API.PushString(".set"); //t k v mt .set
+                    API.RawGet(-2);         //t k v mt tset
 
                     if (API.IsTable(-1))
                     {
-                        API.PushValue(2);
-                        API.RawGet(-2);
+                        API.PushValue(2);   //t k v mt tset k
+                        API.RawGet(-2);     //t k v mt tset func
 
+                        //调用函数需要传入自己
                         if (API.IsFunction(-1))
                         {
-                            API.PushValue(1);
-                            API.PushValue(3);
-                            API.Call(2, 0);
+                            API.PushValue(1);   //t k v mt tset func t
+                            API.PushValue(3);   //t k v mt test func t v
+                            API.Call(2, 0);     //t k v mt test
                             return 0;
                         }
 
