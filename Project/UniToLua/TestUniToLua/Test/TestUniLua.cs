@@ -1,12 +1,11 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using NUnit.Framework;
 using UniLua;
 
 namespace TestUniToLua
 {
-    [TestClass]
     public class TestUniLua
     {
-        [TestMethod]
+        [Test]
         public void TestLightUserData()
         {
             LuaState state = Util.InitTestEnv();

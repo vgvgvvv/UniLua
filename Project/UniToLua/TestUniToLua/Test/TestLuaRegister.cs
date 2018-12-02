@@ -1,8 +1,6 @@
 ﻿using System;
-using System.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using UniLua;
-using UniLua.Tools;
 
 namespace TestUniToLua
 {
@@ -12,10 +10,19 @@ namespace TestUniToLua
         ENUM_B
     }
 
-    [TestClass]
+    public static class HelloStaticLib
+    {
+        public static string value = "hoho";
+
+        public static string Concat(string str1, string str2)
+        {
+            return str1 + str2;
+        }
+    }
+
     public class TestLuaRegister
     {
-        [TestMethod]
+        [Test]
         public void TestLua()
         {
             LuaState state = Util.InitTestEnv();
@@ -25,7 +32,7 @@ namespace TestUniToLua
             }
         }
 
-        [TestMethod]
+        [Test]
         public void TestRegisterModule()
         {
             LuaState state = Util.InitTestEnv();
@@ -45,7 +52,7 @@ namespace TestUniToLua
         }
 
 
-        [TestMethod]
+        [Test]
         public void TestRegisterEnum()
         {
             LuaState state = Util.InitTestEnv();
@@ -76,10 +83,44 @@ namespace TestUniToLua
             return 1;
         }
 
-        [TestMethod]
-        public void TestSetI()
+        [Test]
+        public void TestRegisterStaticLib()
         {
-            
+            LuaState state = Util.InitTestEnv();
+            state.BeginModule(null);
+            state.BeginModule("Test");
+            state.BeginStaticLib("HelloStaticLib");
+            state.RegVar("value", HelloStatic_get_value, HelloStatic_set_value);
+            state.RegFunction("Concat", HelloStatic_Concat);
+            state.EndStaticLib();
+            state.EndModule();
+            state.EndModule();
+
+            if (state.L_DoFile("TestLuaRegisterStaticLib.lua") != ThreadStatus.LUA_OK)
+            {
+                Console.WriteLine(state.L_CheckString(-1));
+            }
+        }
+
+        private int HelloStatic_get_value(ILuaState L)
+        {
+            L.PushString(HelloStaticLib.value);
+            return 1;
+        }
+
+        private int HelloStatic_set_value(ILuaState L)
+        {
+            var result = L.L_CheckString(-1);
+            HelloStaticLib.value = result;
+            return 1;
+        }
+
+        private int HelloStatic_Concat(ILuaState L)
+        {
+            var str1 = L.L_CheckString(-1);
+            var str2 = L.L_CheckString(-2);
+            L.PushString(HelloStaticLib.Concat(str1, str2));
+            return 1;
         }
 
 

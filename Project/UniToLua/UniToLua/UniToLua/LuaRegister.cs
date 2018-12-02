@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace UniLua
@@ -172,12 +173,103 @@ namespace UniLua
 
         public void BeginStaticLib(string staticLibName)
         {
+            API.PushString(staticLibName);  //name
+            API.NewTable();                 //name table
+            AddToLoaded();                  
+            API.PushValue(-1);              //name table table
+
+            //TODO tag??
+
+            API.PushString(".name");        //name table table .name
+            PushFullName(-4);
+            API.RawSet(-3);
+
+            API.PushString(GetTagMethodName(TMS.TM_INDEX));
+            API.PushCSharpFunction(StaticIndexEvent);
+            API.RawSet(-3);
+
+            API.PushString(GetTagMethodName(TMS.TM_NEWINDEX));
+            API.PushCSharpFunction(StackNewIndexEvent);
+            API.RawSet(-3);
 
         }
 
         public void EndStaticLib()
         {
+            API.SetMetaTable(-2);   //name table table
+            API.RawSet(-3);         //name table
+        }
 
+        /// <summary>
+        /// t k 
+        /// </summary>
+        /// <param name="L"></param>
+        /// <returns></returns>
+        private int StaticIndexEvent(ILuaState L)
+        {
+            API.PushValue(2);   //t k k
+            API.RawGet(1);      //t k v
+
+            if (!API.IsNil(-1))
+            {
+                return 1;
+            }
+
+            API.Pop(1);
+            API.PushString(".get"); //t k .get
+            API.RawGet(1);          //t k tget
+
+            if (API.IsTable(-1))
+            {
+                API.PushValue(2);   //t k tget k
+                API.RawGet(-2);     //t k tget func
+
+                if (API.IsFunction(-1))
+                {
+                    API.Call(0, 1);
+                    return 1;
+                }
+            }
+
+            API.SetTop(2);
+
+            if (GetFromPreload())
+            {
+                return 1;
+            }
+
+            L_Error("field or property %s does not exist", API.ToString(2));
+            return 1;
+
+        }
+
+        /// <summary>
+        /// t k v
+        /// </summary>
+        /// <param name="L"></param>
+        /// <returns></returns>
+        private int StackNewIndexEvent(ILuaState L)
+        {
+            API.PushString(".set"); //t k v.set
+            API.RawGet(1);          // t k v table
+
+            if (API.IsTable(-1))    
+            {
+                API.PushValue(2);   //t k v table k
+                API.RawGet(-2);     //t k v table func
+
+                if (API.IsFunction(-1))
+                {
+                    API.PushValue(1);
+                    API.PushValue(3);
+                    API.Call(2, 0);
+                    return 0;
+                }
+            }
+
+            API.SetTop(3);
+            L_Error("field or property %s does not exist", API.ToString(2));
+            return 1;
         }
 
         #endregion
@@ -192,6 +284,8 @@ namespace UniLua
             API.NewTable();                 //enumName table
             AddToLoaded();                  
             API.NewTable();                 //enumName table table
+
+            //TODO tag??
 
             API.PushString(".name");        //enumName table table .name
             PushFullName(-4);               //enumName table table .name fullname
@@ -222,9 +316,9 @@ namespace UniLua
         ///
         /// table key
         /// </summary>
-        /// <param name="state"></param>
+        /// <param name="L"></param>
         /// <returns></returns>
-        private int EnumIndexEvent(ILuaState state)
+        private int EnumIndexEvent(ILuaState L)
         {
             API.GetMetaTable(1);    //table key meta
 
@@ -267,7 +361,7 @@ namespace UniLua
             return 1;
         }
 
-        private int EnumNewIndexEvent(ILuaState state)
+        private int EnumNewIndexEvent(ILuaState L)
         {
             L_Error("the left-hand side of an assignment must be a variable, a property or an indexer");
             return 1;
@@ -276,7 +370,9 @@ namespace UniLua
 
         public void RegFunction(string funcName, CSharpFunctionDelegate func)
         {
-
+            API.PushString(funcName);
+            API.PushCSharpFunction(func);
+            API.RawSet(-3);
         }
 
         /// <summary>
@@ -360,11 +456,46 @@ namespace UniLua
         /// </summary>
         private void AddToLoaded()
         {
-            GetRef(LUA_LOADED);     //name table preload
+            GetRef(TOLUA_LOADED);     //name table preload
             PushFullName(-3);       //name table preload fullname
             API.PushValue(-3);      //name table preload fullname table
             API.RawSet(-3);         //name table preload
             API.Pop(1);             //name table
+        }
+
+        /// <summary>
+        /// t k
+        /// </summary>
+        /// <returns></returns>
+        private bool GetFromPreload()
+        {
+            API.SetTop(2);          //t k
+            API.SetMetaTable(1);    //t k mt
+            API.PushString(".name");//t k mt .name
+            API.RawGet(-2);         //t k mt space
+
+            if (!API.IsNil(-1))
+            {
+                GetRef(TOLUA_PRELOAD);  //t k mt space preload
+                API.PushValue(-2);      //t k mt space preload space
+                API.PushString(".");    //t k mt space preload space .
+                API.PushValue(2);       ////t k mt space preload space . k
+                API.Concat(3);          //t k mt space preload fullname
+                API.PushValue(-1);      //t k mt space preload fullname fullname
+                API.RawGet(-3);         //t k mt space preload fullname value
+
+                if (!API.IsNil(-1))
+                {
+                    API.Pop(1);             //t k mt space preload fullname
+                    GetRef(TOLUA_REQUIRE);  //t k mt space preload fullname require
+                    API.PushValue(-2);      //t k mt space preload fullname require fullname
+                    API.Call(1, 1);
+                    return true;
+                }
+            }
+
+            API.SetTop(2);
+            return false;
         }
         
     }

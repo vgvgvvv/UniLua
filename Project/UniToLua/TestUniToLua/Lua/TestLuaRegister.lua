@@ -1,2 +1,2 @@
 ﻿
-print(tostring(Test.HHH))
+print(tostring(package.preload))

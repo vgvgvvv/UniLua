@@ -1,3 +1,3 @@
 ﻿
 
-print(tostring(tolua.preload))
+print(tostring(package.preload))
