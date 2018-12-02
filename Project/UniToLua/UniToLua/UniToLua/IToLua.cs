@@ -2,6 +2,10 @@
 
 namespace UniLua
 {
+    public partial interface ILuaState : IToLua
+    {
+    }
+
     public interface IToLua
     {
         void OpenToLua();
