@@ -1,4 +1,6 @@
-﻿namespace UniLua
+﻿using System;
+
+namespace UniLua
 {
     public partial class LuaState
     {
@@ -7,6 +9,16 @@
             API.PushString(tableName);
             API.NewTable();
             API.RawSet(index);
+        }
+
+        public void PushObject(Object obj)
+        {
+            var type = obj.GetType();
+            var reference = ClassMetaRefDict[type.Name];
+            API.PushLightUserData(obj);
+            GetRef(reference);
+            API.SetMetaTable(-2);
+
         }
     }
 }

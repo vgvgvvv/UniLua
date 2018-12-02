@@ -118,7 +118,7 @@ namespace UniLua
 		string 	DebugGetInstructionHistory();
 	}
 
-	public interface ILuaState : ILuaAPI, ILuaAuxLib
+	public interface ILuaState : ILuaAPI, ILuaAuxLib, IToLua
 	{
 	}
 

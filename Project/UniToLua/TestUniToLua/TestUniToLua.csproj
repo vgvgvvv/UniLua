@@ -53,6 +53,7 @@
     <Compile Include="Test\Util.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Lua\TestLuaRegisterClass.lua" />
     <None Include="Lua\TestLuaRegisterStaticLib.lua" />
     <None Include="Lua\TestUniLua.lua" />
     <None Include="Lua\TestLuaRegisterEnum.lua" />

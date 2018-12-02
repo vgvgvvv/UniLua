@@ -75,6 +75,7 @@
     <Compile Include="UniLua\Undump.cs" />
     <Compile Include="UniLua\Util.cs" />
     <Compile Include="UniLua\VM.cs" />
+    <Compile Include="UniToLua\IToLua.cs" />
     <Compile Include="UniToLua\LuaInit.cs" />
     <Compile Include="UniToLua\LuaReference.cs" />
     <Compile Include="UniToLua\LuaRegister.cs" />
