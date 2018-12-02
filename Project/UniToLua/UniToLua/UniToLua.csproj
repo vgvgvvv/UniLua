@@ -40,7 +40,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CustomSetting.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UniLua\ByteString.cs" />
     <Compile Include="UniLua\Coder.cs" />
@@ -80,7 +79,7 @@
     <Compile Include="UniToLua\LuaReference.cs" />
     <Compile Include="UniToLua\LuaRegister.cs" />
     <Compile Include="UniToLua\LuaUtil.cs" />
-    <Compile Include="UniToLua\ToLuaGener.cs" />
+    <Compile Include="UniToLua\ToLuaAttribute.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

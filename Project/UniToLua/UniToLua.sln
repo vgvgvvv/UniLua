@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniToLua", "UniToLua\UniToL
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestUniToLua", "TestUniToLua\TestUniToLua.csproj", "{3C3A1929-028B-47C7-B042-FCF8E0D91E5F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniToLuaGener", "UniToLuaGener\UniToLuaGener.csproj", "{AB36F82A-F429-4B1C-85B5-7A985FF09A06}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{3C3A1929-028B-47C7-B042-FCF8E0D91E5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C3A1929-028B-47C7-B042-FCF8E0D91E5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3C3A1929-028B-47C7-B042-FCF8E0D91E5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB36F82A-F429-4B1C-85B5-7A985FF09A06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB36F82A-F429-4B1C-85B5-7A985FF09A06}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB36F82A-F429-4B1C-85B5-7A985FF09A06}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB36F82A-F429-4B1C-85B5-7A985FF09A06}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
