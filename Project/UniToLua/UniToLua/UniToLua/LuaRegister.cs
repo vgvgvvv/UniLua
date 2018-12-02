@@ -178,7 +178,6 @@ namespace UniLua
 
         #endregion
 
-
         #region Class
 
         public int BeginClass(Type bindClass, Type baseClass)
@@ -480,8 +479,6 @@ namespace UniLua
             API.SetTop(3);
             return L_Error("field or property %s does not exist", API.ToString(2));
         }
-
-        
 
         #endregion
 
