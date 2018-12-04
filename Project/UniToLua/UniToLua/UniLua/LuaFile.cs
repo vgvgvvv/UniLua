@@ -8,7 +8,7 @@ namespace UniLua
 	public class LuaFile
 	{
 		//private static readonly string LUA_ROOT = System.IO.Path.Combine(Application.streamingAssetsPath, "LuaRoot");
-		private static PathHook pathhook = (s) => Path.Combine(CustomSetting.LuaRoot, s);
+		private static PathHook pathhook = (s) => Path.Combine(Environment.CurrentDirectory, s);
 		public static void SetPathHook(PathHook hook) {
 			pathhook = hook;
 		}

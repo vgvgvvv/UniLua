@@ -196,6 +196,11 @@ namespace UniLua
 			return d;
 		}
 
+	    public bool L_CheckBool(int narg)
+	    {
+	        return API.ToBoolean(narg);
+	    }
+
 		public string L_CheckString( int narg )
 		{
 			string s = API.ToString( narg );
@@ -211,6 +216,11 @@ namespace UniLua
 				TagError( narg, LuaType.LUA_TNUMBER );
 			return d;
 		}
+
+	    public object L_CheckOBject(int narg)
+	    {
+	        return API.ToObject(narg);
+	    }
 
 		public T L_Opt<T>( Func<int,T> f, int n, T def )
 		{

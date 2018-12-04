@@ -13,8 +13,7 @@ namespace UniLua.Tools
 
 		static ULDebug()
 		{
-		    Log = CustomSetting.Log;
-		    LogError = CustomSetting.LogError;
+		   
 		}
 	}
 }
