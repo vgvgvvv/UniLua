@@ -36,7 +36,7 @@ namespace UniToLuaGener
                 dllPath = dllpath,
                 outputPath = outputPath
             };
-            exporter.GenAll(Assembly.LoadFile(dllpath));
+            exporter.GenAll();
         }
     }
 }

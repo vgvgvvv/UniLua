@@ -12,8 +12,6 @@ namespace UniLua
 
         void NewTable(string tableName, int index = -3);
 
-        void PushObject(Object obj);
-
         bool BeginModule(string name);
 
         void EndModule();
@@ -34,6 +32,24 @@ namespace UniLua
 
         void RegVar(string name, CSharpFunctionDelegate get, CSharpFunctionDelegate set);
 
+
+        #region Check
+
+        void PushObject<T>(T obj);
+
+        void PushInt64(long value);
+
+        void PushValue<T>(T value);
+
+        T CheckObject<T>(int arg, bool notNull = true);
+
+        T[] CheckArray<T>(int arg);
+
+        T CheckValue<T>(int arg);
+
+        T GetValue<T>(TValue v);
+
+        #endregion
 
     }
 }

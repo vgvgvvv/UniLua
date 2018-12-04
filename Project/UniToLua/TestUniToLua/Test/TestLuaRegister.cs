@@ -166,7 +166,7 @@ namespace TestUniToLua
 
         private int Test_TestClass_New(ILuaState L)
         {
-            L.PushObject(new TestClass());
+            L.PushValue(new TestClass());
             return 1;
         }
 
