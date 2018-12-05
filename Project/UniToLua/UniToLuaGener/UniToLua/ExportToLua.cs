@@ -1,5 +1,6 @@
 ﻿using System;
 using System.CodeDom;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -32,10 +33,18 @@ namespace UniToLuaGener
             return types.ToList();
         }
 
+        #region GenBinder
+
         public void GenBinder(List<Type> targetTypeList)
         {
+            Hashtable NameSpaceTable = new Hashtable();
 
         }
+
+        #endregion
+
+
+        #region GenWrapper
 
         public void GenWrapper(List<Type> targetTypeList)
         {
@@ -47,7 +56,7 @@ namespace UniToLuaGener
                 }
                 else if (type.IsInterface)
                 {
-                    Logger.Error("Cannot Gen Interface Wrap");    
+                    Logger.Error("Cannot Gen Interface Wrap");
                 }
                 else if (type.IsSealed && type.IsAbstract)
                 {
@@ -66,7 +75,7 @@ namespace UniToLuaGener
         {
             if (enumType == null)
                 return;
-            var className = enumType.FullName?.Replace(".", "_") + "Wrap";
+            var className = GetClassFileName(enumType);
             var enumNames = enumType.GetEnumNames();
 
             CodeGener gener = new CodeGener("UniToLua", className);
@@ -108,7 +117,7 @@ namespace UniToLuaGener
         {
             if (libType == null)
                 return;
-            var className = libType.FullName?.Replace(".", "_") + "Wrap";
+            var className = GetClassFileName(libType);
             CodeGener gener = new CodeGener("UniToLua", className);
 
             var fields = libType.GetFields(BindingFlags.Public | BindingFlags.Static);
@@ -193,7 +202,7 @@ namespace UniToLuaGener
         {
             if (classType == null)
                 return;
-            var className = classType.FullName?.Replace(".", "_") + "Wrap";
+            var className = GetClassFileName(classType);
             CodeGener gener = new CodeGener("UniToLua", className);
 
             var baseClassName = classType.BaseType == typeof(System.Object) || classType.BaseType == null
@@ -274,7 +283,7 @@ namespace UniToLuaGener
 
             foreach (var propertyInfo in propertys)
             {
-                if ((propertyInfo.GetMethod != null && propertyInfo.GetMethod.IsStatic) || 
+                if ((propertyInfo.GetMethod != null && propertyInfo.GetMethod.IsStatic) ||
                     (propertyInfo.SetMethod != null && propertyInfo.SetMethod.IsStatic))
                 {
                     GenRegStaticProperty(gener, classType, propertyInfo);
@@ -283,7 +292,7 @@ namespace UniToLuaGener
                 {
                     GenRegMemberProperty(gener, classType, propertyInfo);
                 }
-                
+
             }
 
             foreach (var methodInfo in methods)
@@ -296,7 +305,7 @@ namespace UniToLuaGener
                 {
                     GenRegMemberFunction(gener, classType, methodInfo);
                 }
-                
+
             }
 
             gener.GenCSharp(outputPath);
@@ -305,7 +314,7 @@ namespace UniToLuaGener
 
         #endregion
 
-
+        #region GenMember
 
         private void GenConstructor(CodeGener gener, Type type)
         {
@@ -519,6 +528,10 @@ namespace UniToLuaGener
                 temp.ToArray());
         }
 
+        #endregion
+
+        #region Util
+
         /// <summary>
         /// 获取Push方法对应的String
         /// </summary>
@@ -556,6 +569,18 @@ namespace UniToLuaGener
 
             return false;
         }
-        
+
+        #endregion
+
+        #endregion
+
+        private string GetClassFileName(Type type)
+        {
+            if (type == null)
+                return null;
+            var className = type.FullName?.Replace(".", "_").Replace("+", "_") + "Wrap";
+            return className;
+        }
+
     }
 }
