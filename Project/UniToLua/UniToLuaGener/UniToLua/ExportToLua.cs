@@ -37,8 +37,64 @@ namespace UniToLuaGener
 
         public void GenBinder(List<Type> targetTypeList)
         {
-            Hashtable NameSpaceTable = new Hashtable();
+            CodeGener gener = new CodeGener("UniToLua", "LuaBinder");
+            Hashtable GlobalTable = CreateGlobalTable(targetTypeList);
 
+            List<CodeStatement> bindStatements = new List<CodeStatement>();
+
+            bindStatements.Add(new CodeSnippetStatement("\t\t\tL.BeginModule(null);"));
+            GenBindWithTable(bindStatements, GlobalTable);
+            bindStatements.Add(new CodeSnippetStatement("\t\t\tL.EndModule();"));
+
+            gener.AddMemberMethod(typeof(void), "Bind",
+                new Dictionary<string, Type>() {{"L", typeof(LuaState)}},
+                MemberAttributes.Public | MemberAttributes.Static, bindStatements.ToArray());
+
+            gener.GenCSharp(outputPath);
+        }
+
+        private void GenBindWithTable(List<CodeStatement> bindStatements, Hashtable currentTable)
+        {
+            foreach (var key in currentTable.Keys)
+            {
+                if (currentTable[key] is Hashtable)
+                {
+                    bindStatements.Add(new CodeSnippetStatement($"\t\t\tL.BeginModule(\"{key}\");"));
+                    GenBindWithTable(bindStatements, (Hashtable) currentTable[key]);
+                    bindStatements.Add(new CodeSnippetStatement($"\t\t\tL.EndModule();"));
+                }
+                else if (currentTable[key] is Type)
+                {
+                    bindStatements.Add(new CodeSnippetStatement($"\t\t\t{GetClassFileName((Type)currentTable[key])}.Register(L);"));
+                }
+            }
+        }
+
+        private Hashtable CreateGlobalTable(List<Type> targetTypeList)
+        {
+            Hashtable GlobalTable = new Hashtable();
+            foreach (var type in targetTypeList)
+            {
+                if (type == null)
+                    continue;
+                Hashtable currentNSTable = GlobalTable;
+                var nsList = type.Namespace.Split('.');
+                foreach (var ns in nsList)
+                {
+                    if (!currentNSTable.Contains(ns))
+                    {
+                        currentNSTable.Add(ns, new Hashtable());
+                    }
+                    currentNSTable = currentNSTable[ns] as Hashtable;
+                    if (currentNSTable == null)
+                    {
+                        Logger.Error($"namespace {type.Namespace} type error");
+                        break;
+                    }
+                }
+                currentNSTable.Add(type.Name, type);
+            }
+            return GlobalTable;
         }
 
         #endregion
@@ -322,7 +378,7 @@ namespace UniToLuaGener
             var constructorInfos = type.GetConstructors();
             var temp = new List<CodeStatement>()
             {
-                new CodeSnippetStatement($"\t\t\tL.{GetPushString(type)}(new {type.FullName}())"),
+                new CodeSnippetStatement($"\t\t\tL.{GetPushString(type)}(new {type.FullName}());"),
                 new CodeSnippetStatement($"\t\t\treturn 1;"),
             };
 

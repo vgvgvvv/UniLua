@@ -7,8 +7,8 @@ namespace TestUniToLua
 {
     public class Util
     {
-        public static readonly string LuaPath = 
-            @"D:\Documents\Projects\UniLua\Project\UniToLua\TestUniToLua\Lua";
+        public static readonly string LuaPath =
+            @"E:\Projects\CSProjects\UniLua\Project\UniToLua\TestUniToLua\Lua";
 
         public static LuaState InitTestEnv()
         {

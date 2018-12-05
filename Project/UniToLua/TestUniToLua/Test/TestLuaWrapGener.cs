@@ -1,4 +1,7 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
+using UniLua;
+using UniToLua;
 using UniToLuaGener;
 
 namespace TestUniToLua
@@ -16,5 +19,17 @@ namespace TestUniToLua
             exporter.GenAll();
         }
 
+        [Test]
+        public void TestAutoBindLua()
+        {
+            LuaState state = Util.InitTestEnv();
+            LuaBinder.Bind(state);
+
+            if (state.L_DoFile("TestAutoRegister.lua") != ThreadStatus.LUA_OK)
+            {
+                Console.WriteLine(state.L_CheckString(-1));
+            }
+
+        }
     }
 }
