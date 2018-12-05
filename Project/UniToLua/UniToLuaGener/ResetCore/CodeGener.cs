@@ -251,7 +251,6 @@ namespace ResetCore.CodeDom
 
             using (System.IO.StreamWriter sw = new System.IO.StreamWriter(outputFilePath))
             {
-                Logger.Log("生成代码" + outputFilePath);
                 provider.GenerateCodeFromCompileUnit(unit, sw, options);
             }
 

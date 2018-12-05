@@ -2,6 +2,7 @@
 using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -17,7 +18,7 @@ namespace UniToLuaGener
 
         public void GenAll()
         {
-            var target = Assembly.LoadFile(dllPath);
+            var target = Assembly.LoadFile(Path.GetFullPath(dllPath));
             List<Type> targetTypeList = GetTargetType(target);
             GenWrapper(targetTypeList);
             GenBinder(targetTypeList);

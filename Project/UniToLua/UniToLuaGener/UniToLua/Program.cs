@@ -32,7 +32,23 @@ namespace UniToLuaGener
                     {
                         dllList = temp[1].Split('|').ToList();
                     }
+                }else if (arg == "-help")
+                {
+                    Logger.Log(
+                        @"
+usage UniToLuaGener -path:outputpath -dll:dllpath|dllpath|dllpath
+");
+                    return;
                 }
+            }
+
+            if (outputPath == null)
+            {
+                outputPath = Environment.CurrentDirectory;
+            }
+            if (dllList.Count == 0)
+            {
+                Logger.Error("no input \n-help for more info");
             }
 
             foreach (var dllPath in dllList)
@@ -43,6 +59,7 @@ namespace UniToLuaGener
 
         private static void GenAll(string dllpath)
         {
+            
             var exporter = new ExportToLua()
             {
                 dllPath = dllpath,
