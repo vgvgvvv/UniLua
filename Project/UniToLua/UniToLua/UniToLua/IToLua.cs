@@ -51,5 +51,20 @@ namespace UniLua
 
         #endregion
 
+        #region CheckType
+
+        bool CheckNum(int count);
+        bool CheckType<T1>(int pos);
+        bool CheckType<T1, T2>(int pos);
+        bool CheckType<T1, T2, T3>(int pos);
+        bool CheckType<T1, T2, T3, T4>(int pos);
+        bool CheckType<T1, T2, T3, T4, T5>(int pos);
+        bool CheckType<T1, T2, T3, T4, T5, T6>(int pos);
+        bool CheckType<T1, T2, T3, T4, T5, T6, T7>(int pos);
+        bool CheckType<T1, T2, T3, T4, T5, T6, T7, T8>(int pos);
+        bool CheckType<T1, T2, T3, T4, T5, T6, T7, T8, T9>(int pos);
+
+        #endregion
+
     }
 }
