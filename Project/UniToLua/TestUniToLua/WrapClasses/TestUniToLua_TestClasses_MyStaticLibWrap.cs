@@ -52,10 +52,15 @@ namespace UniToLua
         
         private static int Function(UniLua.ILuaState L)
         {
-			var arg1 = L.CheckValue<System.Int32>(1);
-			var arg2 = L.CheckValue<System.Int32>(2);
-			var result = TestUniToLua.TestClasses.MyStaticLib.Function(arg1, arg2);
-			L.PushValue<System.Int32>(result);
+			if(L.CheckNum(2) && L.CheckType<System.Int32, System.Int32>(1))
+			{
+				var arg1 = L.CheckValue<System.Int32>(1);
+				var arg2 = L.CheckValue<System.Int32>(2);
+				var result = TestUniToLua.TestClasses.MyStaticLib.Function(arg1, arg2);
+				L.PushValue<System.Int32>(result);
+				return 1;
+			}
+			L.L_Error("call function args is error");
 			return 1;
         }
     }

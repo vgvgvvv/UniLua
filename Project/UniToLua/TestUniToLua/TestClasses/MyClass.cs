@@ -14,6 +14,17 @@ namespace TestUniToLua.TestClasses
             return a + b;
         }
 
+        public MyClass()
+        {
+            
+        }
+
+        public MyClass(MyClass mc)
+        {
+            memberField = mc.memberField;
+            memberProperty = mc.memberProperty;
+        }
+
         public int memberField = 300;
 
         public int memberProperty { get; set; } = 400;

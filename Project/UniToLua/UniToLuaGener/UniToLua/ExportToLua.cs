@@ -178,7 +178,7 @@ namespace UniToLuaGener
 
             var fields = libType.GetFields(BindingFlags.Public | BindingFlags.Static);
             var propertys = libType.GetProperties(BindingFlags.Public | BindingFlags.Static);
-            var methods = libType.GetMethods(BindingFlags.Public | BindingFlags.Static).Where((method) =>
+            var methodGroups = libType.GetMethods(BindingFlags.Public | BindingFlags.Static).Where((method) =>
             {
                 if (propertys.Count(prop => prop.GetMethod == method || prop.SetMethod == method) != 0)
                 {
@@ -189,7 +189,7 @@ namespace UniToLuaGener
                     return false;
                 }
                 return true;
-            }).ToArray();
+            }).GroupBy(mi=>mi.Name).ToArray();
 
             List<CodeStatement> registerMethodStatement = new List<CodeStatement>();
             registerMethodStatement.Add(new CodeSnippetStatement($"\t\t\tL.BeginStaticLib(\"{libType.Name}\");"));
@@ -222,9 +222,9 @@ namespace UniToLuaGener
                 registerMethodStatement.Add(new CodeSnippetStatement(builder.ToString()));
             }
 
-            foreach (var methodInfo in methods)
+            foreach (var methodGroup in methodGroups)
             {
-                registerMethodStatement.Add(new CodeSnippetStatement($"\t\t\tL.RegFunction(\"{methodInfo.Name}\", {methodInfo.Name});"));
+                registerMethodStatement.Add(new CodeSnippetStatement($"\t\t\tL.RegFunction(\"{methodGroup.Key}\", {methodGroup.Key});"));
             }
 
             registerMethodStatement.Add(new CodeSnippetStatement($"\t\t\tL.EndStaticLib();"));
@@ -242,9 +242,9 @@ namespace UniToLuaGener
                 GenRegStaticProperty(gener, libType, propertyInfo);
             }
 
-            foreach (var methodInfo in methods)
+            foreach (var methodGroup in methodGroups)
             {
-                GenRegStaticFunction(gener, libType, methodInfo);
+                GenRegStaticFunction(gener, libType, methodGroup.ToArray());
             }
 
             gener.GenCSharp(outputPath);
@@ -266,7 +266,7 @@ namespace UniToLuaGener
                 : classType.BaseType.FullName;
             var fields = classType.GetFields();
             var propertys = classType.GetProperties();
-            var methods = classType.GetMethods().Where((method) =>
+            var methodGroups = classType.GetMethods().Where((method) =>
             {
                 if (propertys.Count(prop => prop.GetMethod == method || prop.SetMethod == method) != 0)
                 {
@@ -277,7 +277,7 @@ namespace UniToLuaGener
                     return false;
                 }
                 return true;
-            }).ToArray();
+            }).GroupBy(mi => mi.Name).ToArray();
 
             List<CodeStatement> registerMethodStatement = new List<CodeStatement>();
 
@@ -313,9 +313,9 @@ namespace UniToLuaGener
                 registerMethodStatement.Add(new CodeSnippetStatement(builder.ToString()));
             }
 
-            foreach (var methodInfo in methods)
+            foreach (var methodGroup in methodGroups)
             {
-                registerMethodStatement.Add(new CodeSnippetStatement($"\t\t\tL.RegFunction(\"{methodInfo.Name}\", {methodInfo.Name});"));
+                registerMethodStatement.Add(new CodeSnippetStatement($"\t\t\tL.RegFunction(\"{methodGroup.Key}\", {methodGroup.Key});"));
             }
 
             registerMethodStatement.Add(new CodeSnippetStatement("\t\t\tL.EndClass();"));
@@ -351,15 +351,19 @@ namespace UniToLuaGener
 
             }
 
-            foreach (var methodInfo in methods)
+            foreach (var methodGroup in methodGroups)
             {
-                if (methodInfo.IsStatic)
+                if (!methodGroup.Any())
                 {
-                    GenRegStaticFunction(gener, classType, methodInfo);
+                    continue;
+                }
+                if (methodGroup.First().IsStatic)
+                {
+                    GenRegStaticFunction(gener, classType, methodGroup.ToArray());
                 }
                 else
                 {
-                    GenRegMemberFunction(gener, classType, methodInfo);
+                    GenRegMemberFunction(gener, classType, methodGroup.ToArray());
                 }
 
             }
@@ -376,11 +380,68 @@ namespace UniToLuaGener
         {
             //TODO
             var constructorInfos = type.GetConstructors();
-            var temp = new List<CodeStatement>()
+
+            var temp = new List<CodeStatement>();
+
+            int count = 0;
+            foreach (var constructorInfo in constructorInfos)
             {
-                new CodeSnippetStatement($"\t\t\tL.{GetPushString(type)}(new {type.FullName}());"),
-                new CodeSnippetStatement($"\t\t\treturn 1;"),
-            };
+                var args = constructorInfo.GetParameters();
+
+                //检查类型的方法
+                StringBuilder checkStringBuilder = new StringBuilder();
+                checkStringBuilder.Append($"L.CheckNum({args.Length})");
+                if (args.Length > 0)
+                {
+                    checkStringBuilder.Append($"&& L.CheckType<");
+                    StringBuilder typeArgs = new StringBuilder();
+                    for (int i = 0; i < args.Length; i++)
+                    {
+                        if (i != 0)
+                        {
+                            typeArgs.Append(", ");
+                        }
+                        typeArgs.Append(args[i].ParameterType.FullName);
+                    }
+                    checkStringBuilder.Append(typeArgs);
+                    checkStringBuilder.Append($">(0)");
+                }
+
+                if (count == 0)
+                {
+                    temp.Add(new CodeSnippetStatement($"\t\t\tif({checkStringBuilder})\n\t\t\t{{"));
+                }
+                else
+                {
+                    temp.Add(new CodeSnippetStatement($"\t\t\telse if({checkStringBuilder})\n\t\t\t{{"));
+                }
+
+                for (int i = 1; i <= args.Length; i++)
+                {
+                    var paramInfo = args[i - 1];
+                    temp.Add(new CodeSnippetStatement($"\t\t\t\tvar arg{i} = L.{GetCheckString(paramInfo.ParameterType)}({i});"));
+                }
+
+                var paramBuilder = new StringBuilder();
+                for (int i = 1; i <= args.Length; i++)
+                {
+                    if (i != 1)
+                    {
+                        paramBuilder.Append(", ");
+                    }
+                    paramBuilder.Append($"arg{i}");
+                }
+
+                temp.Add(new CodeSnippetStatement($"\t\t\t\tL.{GetPushString(type)}(new {type.FullName}({paramBuilder}));"));
+                temp.Add(new CodeSnippetStatement("\t\t\t\treturn 1;"));
+
+                temp.Add(new CodeSnippetStatement($"\t\t\t}}"));
+
+                count++;
+            }
+
+            temp.Add(new CodeSnippetStatement("\t\t\tL.L_Error(\"call function args is error\");"));
+            temp.Add(new CodeSnippetStatement("\t\t\treturn 1;"));
 
             gener.AddMemberMethod(typeof(int), $"_Create{type.Name}",
                 new Dictionary<string, Type>() { { "L", typeof(ILuaState) } }, MemberAttributes.Private | MemberAttributes.Static, temp.ToArray());
@@ -442,42 +503,79 @@ namespace UniToLuaGener
             }
         }
 
-        private void GenRegStaticFunction(CodeGener gener, Type type, MethodInfo methodInfo)
+        private void GenRegStaticFunction(CodeGener gener, Type type, MethodInfo[] methodGroup)
         {
             var temp = new List<CodeStatement>();
-            var paramInfos = methodInfo.GetParameters();
 
-            for (int i = 1; i <= paramInfos.Length; i++)
+            int count = 0;
+            foreach (var methodInfo in methodGroup)
             {
-                var paramInfo = paramInfos[i - 1];
-                temp.Add(new CodeSnippetStatement($"\t\t\tvar arg{i} = L.{GetCheckString(paramInfo.ParameterType)}({i});"));
-            }
+                var args = methodInfo.GetParameters();
 
-            var paramBuilder = new StringBuilder();
-            for (int i = 1; i <= paramInfos.Length; i++)
-            {
-                var paramInfo = paramInfos[i - 1];
-                if (i != 1)
+                //检查类型的方法
+                StringBuilder checkStringBuilder = new StringBuilder();
+                checkStringBuilder.Append($"L.CheckNum({args.Length})");
+                if (args.Length > 0)
                 {
-                    paramBuilder.Append(", ");
+                    checkStringBuilder.Append($" && L.CheckType<");
+                    StringBuilder typeArgs = new StringBuilder();
+                    for (int i = 0; i < args.Length; i++)
+                    {
+                        if (i != 0)
+                        {
+                            typeArgs.Append(", ");
+                        }
+                        typeArgs.Append(args[i].ParameterType.FullName);
+                    }
+                    checkStringBuilder.Append(typeArgs);
+                    checkStringBuilder.Append($">(1)");
                 }
-                paramBuilder.Append($"arg{i}");
+
+                if (count == 0)
+                {
+                    temp.Add(new CodeSnippetStatement($"\t\t\tif({checkStringBuilder})\n\t\t\t{{"));
+                }
+                else
+                {
+                    temp.Add(new CodeSnippetStatement($"\t\t\telse if({checkStringBuilder})\n\t\t\t{{"));
+                }
+
+                for (int i = 1; i <= args.Length; i++)
+                {
+                    var paramInfo = args[i - 1];
+                    temp.Add(new CodeSnippetStatement($"\t\t\t\tvar arg{i} = L.{GetCheckString(paramInfo.ParameterType)}({i});"));
+                }
+
+                var paramBuilder = new StringBuilder();
+                for (int i = 1; i <= args.Length; i++)
+                {
+                    if (i != 1)
+                    {
+                        paramBuilder.Append(", ");
+                    }
+                    paramBuilder.Append($"arg{i}");
+                }
+
+                if (methodInfo.ReturnType == typeof(void))
+                {
+                    temp.Add(new CodeSnippetStatement($"\t\t\t\t{type.FullName}.{methodInfo.Name}({paramBuilder});"));
+                    temp.Add(new CodeSnippetStatement("\t\t\t\treturn 0;"));
+                }
+                else
+                {
+                    temp.Add(new CodeSnippetStatement($"\t\t\t\tvar result = {type.FullName}.{methodInfo.Name}({paramBuilder});"));
+                    temp.Add(new CodeSnippetStatement($"\t\t\t\tL.{GetPushString(methodInfo.ReturnType)}(result);"));
+                    temp.Add(new CodeSnippetStatement("\t\t\t\treturn 1;"));
+                }
+
+                temp.Add(new CodeSnippetStatement($"\t\t\t}}"));
+                count++;
             }
 
-            if (methodInfo.ReturnType == typeof(void))
-            {
-                temp.Add(new CodeSnippetStatement($"\t\t\t{type.FullName}.{methodInfo.Name}({paramBuilder});"));
-                temp.Add(new CodeSnippetStatement("\t\t\treturn 0;"));
-            }
-            else
-            {
-                temp.Add(new CodeSnippetStatement($"\t\t\tvar result = {type.FullName}.{methodInfo.Name}({paramBuilder});"));
-                temp.Add(new CodeSnippetStatement($"\t\t\tL.{GetPushString(methodInfo.ReturnType)}(result);"));
-                temp.Add(new CodeSnippetStatement("\t\t\treturn 1;"));
-            }
+            temp.Add(new CodeSnippetStatement("\t\t\tL.L_Error(\"call function args is error\");"));
+            temp.Add(new CodeSnippetStatement("\t\t\treturn 1;"));
 
-
-            gener.AddMemberMethod(typeof(int), methodInfo.Name,
+            gener.AddMemberMethod(typeof(int), methodGroup[0].Name,
                 new Dictionary<string, Type>() { { "L", typeof(ILuaState) } }, MemberAttributes.Private | MemberAttributes.Static,
                 temp.ToArray());
         }
@@ -542,44 +640,79 @@ namespace UniToLuaGener
             }
         }
 
-        private void GenRegMemberFunction(CodeGener gener, Type type, MethodInfo methodInfo)
+        private void GenRegMemberFunction(CodeGener gener, Type type, MethodInfo[] methodGroup)
         {
             var temp = new List<CodeStatement>();
-            var paramInfos = methodInfo.GetParameters();
 
-            temp.Add(new CodeSnippetStatement($"\t\t\tvar obj = ({type.FullName}) L.ToObject(1);"));
-            for (int i = 1; i <= paramInfos.Length; i++)
+            int count = 0;
+            foreach (var methodInfo in methodGroup)
             {
-                var paramInfo = paramInfos[i - 1];
-                temp.Add(new CodeSnippetStatement(
-                    $"\t\t\tvar arg{i} = L.{GetCheckString(paramInfo.ParameterType)}({i + 1});"));
-            }
+                var args = methodInfo.GetParameters();
 
-            var paramBuilder = new StringBuilder();
-            for (int i = 1; i <= paramInfos.Length; i++)
-            {
-                var paramInfo = paramInfos[i - 1];
-                if (i != 1)
+                StringBuilder checkStringBuilder = new StringBuilder();
+                checkStringBuilder.Append($"L.CheckNum({args.Length + 1})");
+                if (args.Length > 0)
                 {
-                    paramBuilder.Append(", ");
+                    checkStringBuilder.Append($" && L.CheckType<");
+                    StringBuilder typeArgs = new StringBuilder();
+                    typeArgs.Append(type.FullName);
+                    for (int i = 0; i < args.Length; i++)
+                    {
+                        typeArgs.Append(", ");
+                        typeArgs.Append(args[i].ParameterType.FullName);
+                    }
+                    checkStringBuilder.Append(typeArgs);
+                    checkStringBuilder.Append($">(1)");
                 }
-                paramBuilder.Append($"arg{i}");
+
+                if (count == 0)
+                {
+                    temp.Add(new CodeSnippetStatement($"\t\t\tif({checkStringBuilder})\n\t\t\t{{"));
+                }
+                else
+                {
+                    temp.Add(new CodeSnippetStatement($"\t\t\telse if({checkStringBuilder})\n\t\t\t{{"));
+                }
+
+                temp.Add(new CodeSnippetStatement($"\t\t\t\tvar obj = ({type.FullName}) L.ToObject(1);"));
+                for (int i = 1; i <= args.Length; i++)
+                {
+                    var paramInfo = args[i - 1];
+                    temp.Add(new CodeSnippetStatement(
+                        $"\t\t\t\tvar arg{i} = L.{GetCheckString(paramInfo.ParameterType)}({i + 1});"));
+                }
+
+                var paramBuilder = new StringBuilder();
+                for (int i = 1; i <= args.Length; i++)
+                {
+                    var paramInfo = args[i - 1];
+                    if (i != 1)
+                    {
+                        paramBuilder.Append(", ");
+                    }
+                    paramBuilder.Append($"arg{i}");
+                }
+
+                if (methodInfo.ReturnType == typeof(void))
+                {
+                    temp.Add(new CodeSnippetStatement($"\t\t\t\tobj.{methodInfo.Name}({paramBuilder});"));
+                    temp.Add(new CodeSnippetStatement("\t\t\t\treturn 0;"));
+                }
+                else
+                {
+                    temp.Add(new CodeSnippetStatement($"\t\t\t\tvar result = obj.{methodInfo.Name}({paramBuilder});"));
+                    temp.Add(new CodeSnippetStatement($"\t\t\t\tL.{GetPushString(methodInfo.ReturnType)}(result);"));
+                    temp.Add(new CodeSnippetStatement("\t\t\t\treturn 1;"));
+                }
+
+                temp.Add(new CodeSnippetStatement($"\t\t\t}}"));
+                count++;
             }
 
-            if (methodInfo.ReturnType == typeof(void))
-            {
-                temp.Add(new CodeSnippetStatement($"\t\t\tobj.{methodInfo.Name}({paramBuilder});"));
-                temp.Add(new CodeSnippetStatement("\t\t\treturn 0;"));
-            }
-            else
-            {
-                temp.Add(new CodeSnippetStatement($"\t\t\tvar result = obj.{methodInfo.Name}({paramBuilder});"));
-                temp.Add(new CodeSnippetStatement($"\t\t\tL.{GetPushString(methodInfo.ReturnType)}(result);"));
-                temp.Add(new CodeSnippetStatement("\t\t\treturn 1;"));
-            }
+            temp.Add(new CodeSnippetStatement("\t\t\tL.L_Error(\"call function args is error\");"));
+            temp.Add(new CodeSnippetStatement("\t\t\treturn 1;"));
 
-
-            gener.AddMemberMethod(typeof(int), methodInfo.Name,
+            gener.AddMemberMethod(typeof(int), methodGroup[0].Name,
                 new Dictionary<string, Type>() { { "L", typeof(ILuaState) } }, MemberAttributes.Private | MemberAttributes.Static,
                 temp.ToArray());
         }

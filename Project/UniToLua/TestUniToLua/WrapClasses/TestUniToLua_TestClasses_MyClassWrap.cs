@@ -34,7 +34,18 @@ namespace UniToLua
         
         private static int _CreateMyClass(UniLua.ILuaState L)
         {
-			L.PushValue<TestUniToLua.TestClasses.MyClass>(new TestUniToLua.TestClasses.MyClass());
+			if(L.CheckNum(0))
+			{
+				L.PushValue<TestUniToLua.TestClasses.MyClass>(new TestUniToLua.TestClasses.MyClass());
+				return 1;
+			}
+			else if(L.CheckNum(1)&& L.CheckType<TestUniToLua.TestClasses.MyClass>(0))
+			{
+				var arg1 = L.CheckValue<TestUniToLua.TestClasses.MyClass>(1);
+				L.PushValue<TestUniToLua.TestClasses.MyClass>(new TestUniToLua.TestClasses.MyClass(arg1));
+				return 1;
+			}
+			L.L_Error("call function args is error");
 			return 1;
         }
         
@@ -96,53 +107,83 @@ namespace UniToLua
         
         private static int StaticFunction(UniLua.ILuaState L)
         {
-			var arg1 = L.CheckValue<System.Int32>(1);
-			var arg2 = L.CheckValue<System.Int32>(2);
-			var result = TestUniToLua.TestClasses.MyClass.StaticFunction(arg1, arg2);
-			L.PushValue<System.Int32>(result);
+			if(L.CheckNum(2) && L.CheckType<System.Int32, System.Int32>(1))
+			{
+				var arg1 = L.CheckValue<System.Int32>(1);
+				var arg2 = L.CheckValue<System.Int32>(2);
+				var result = TestUniToLua.TestClasses.MyClass.StaticFunction(arg1, arg2);
+				L.PushValue<System.Int32>(result);
+				return 1;
+			}
+			L.L_Error("call function args is error");
 			return 1;
         }
         
         private static int MemberFunction(UniLua.ILuaState L)
         {
-			var obj = (TestUniToLua.TestClasses.MyClass) L.ToObject(1);
-			var arg1 = L.CheckValue<System.Int32>(2);
-			var arg2 = L.CheckValue<System.Int32>(3);
-			var result = obj.MemberFunction(arg1, arg2);
-			L.PushValue<System.Int32>(result);
+			if(L.CheckNum(3) && L.CheckType<TestUniToLua.TestClasses.MyClass, System.Int32, System.Int32>(1))
+			{
+				var obj = (TestUniToLua.TestClasses.MyClass) L.ToObject(1);
+				var arg1 = L.CheckValue<System.Int32>(2);
+				var arg2 = L.CheckValue<System.Int32>(3);
+				var result = obj.MemberFunction(arg1, arg2);
+				L.PushValue<System.Int32>(result);
+				return 1;
+			}
+			L.L_Error("call function args is error");
 			return 1;
         }
         
         private static int ToString(UniLua.ILuaState L)
         {
-			var obj = (TestUniToLua.TestClasses.MyClass) L.ToObject(1);
-			var result = obj.ToString();
-			L.PushValue<System.String>(result);
+			if(L.CheckNum(1))
+			{
+				var obj = (TestUniToLua.TestClasses.MyClass) L.ToObject(1);
+				var result = obj.ToString();
+				L.PushValue<System.String>(result);
+				return 1;
+			}
+			L.L_Error("call function args is error");
 			return 1;
         }
         
         private static int Equals(UniLua.ILuaState L)
         {
-			var obj = (TestUniToLua.TestClasses.MyClass) L.ToObject(1);
-			var arg1 = L.CheckValue<System.Object>(2);
-			var result = obj.Equals(arg1);
-			L.PushValue<System.Boolean>(result);
+			if(L.CheckNum(2) && L.CheckType<TestUniToLua.TestClasses.MyClass, System.Object>(1))
+			{
+				var obj = (TestUniToLua.TestClasses.MyClass) L.ToObject(1);
+				var arg1 = L.CheckValue<System.Object>(2);
+				var result = obj.Equals(arg1);
+				L.PushValue<System.Boolean>(result);
+				return 1;
+			}
+			L.L_Error("call function args is error");
 			return 1;
         }
         
         private static int GetHashCode(UniLua.ILuaState L)
         {
-			var obj = (TestUniToLua.TestClasses.MyClass) L.ToObject(1);
-			var result = obj.GetHashCode();
-			L.PushValue<System.Int32>(result);
+			if(L.CheckNum(1))
+			{
+				var obj = (TestUniToLua.TestClasses.MyClass) L.ToObject(1);
+				var result = obj.GetHashCode();
+				L.PushValue<System.Int32>(result);
+				return 1;
+			}
+			L.L_Error("call function args is error");
 			return 1;
         }
         
         private static int GetType(UniLua.ILuaState L)
         {
-			var obj = (TestUniToLua.TestClasses.MyClass) L.ToObject(1);
-			var result = obj.GetType();
-			L.PushValue<System.Type>(result);
+			if(L.CheckNum(1))
+			{
+				var obj = (TestUniToLua.TestClasses.MyClass) L.ToObject(1);
+				var result = obj.GetType();
+				L.PushValue<System.Type>(result);
+				return 1;
+			}
+			L.L_Error("call function args is error");
 			return 1;
         }
     }

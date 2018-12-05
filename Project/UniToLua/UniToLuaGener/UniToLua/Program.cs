@@ -19,7 +19,19 @@ namespace UniToLuaGener
             {
                 if (arg.StartsWith("-path"))
                 {
-                    
+                    var temp = arg.Split(':');
+                    if (temp.Length > 1)
+                    {
+                        outputPath = temp[1];
+                    }
+                }
+                else if (arg.StartsWith("-dll"))
+                {
+                    var temp = arg.Split(':');
+                    if (temp.Length > 1)
+                    {
+                        dllList = temp[1].Split('|').ToList();
+                    }
                 }
             }
 

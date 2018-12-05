@@ -12,4 +12,4 @@ print(MyClass.StaticFunction(MyClass.staticField, MyClass.staticProperty))
 print(mc.memberField)
 print(mc.memberProperty)
 
-print(mc.StaticFunction(mc.memberField, mc.memberProperty))
+print(mc:MemberFunction(mc.memberField, mc.memberProperty))

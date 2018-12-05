@@ -116,7 +116,6 @@ namespace TestUniToLua
             state.EndStaticLib();
             state.EndModule();
             state.EndModule();
-
             if (state.L_DoFile("TestLuaRegisterStaticLib.lua") != ThreadStatus.LUA_OK)
             {
                 Console.WriteLine(state.L_CheckString(-1));

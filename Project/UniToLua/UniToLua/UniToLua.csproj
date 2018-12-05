@@ -76,7 +76,6 @@
     <Compile Include="UniLua\VM.cs" />
     <Compile Include="UniToLua\IToLua.cs" />
     <Compile Include="UniToLua\LuaInit.cs" />
-    <Compile Include="UniToLua\LuaReference.cs" />
     <Compile Include="UniToLua\LuaRegister.cs" />
     <Compile Include="UniToLua\LuaUtil.cs" />
     <Compile Include="UniToLua\NoToLuaAttribute.cs" />
