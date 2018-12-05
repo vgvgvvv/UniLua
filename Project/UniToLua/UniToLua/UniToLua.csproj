@@ -81,6 +81,7 @@
     <Compile Include="UniToLua\LuaUtil.cs" />
     <Compile Include="UniToLua\NoToLuaAttribute.cs" />
     <Compile Include="UniToLua\ToLuaAttribute.cs" />
+    <Compile Include="UniToLua\TypeChecker.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

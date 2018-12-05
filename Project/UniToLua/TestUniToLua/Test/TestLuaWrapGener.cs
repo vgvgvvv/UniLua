@@ -10,8 +10,8 @@ namespace TestUniToLua
         {
             var exporter = new ExportToLua()
             {
-                dllPath = @"D:\Documents\Projects\UniLua\Project\UniToLua\TestUniToLua\bin\Debug\TestUniToLua.dll",
-                outputPath = @"D:\Documents\Projects\UniLua\Project\UniToLua\TestUniToLua\WrapClasses"
+                dllPath = @"E:\Projects\CSProjects\UniLua\Project\UniToLua\TestUniToLua\bin\Debug\TestUniToLua.dll",
+                outputPath = @"E:\Projects\CSProjects\UniLua\Project\UniToLua\TestUniToLua\WrapClasses"
             };
             exporter.GenAll();
         }

@@ -75,7 +75,7 @@ namespace UniToLuaGener
             registerMethodStatement.Add(new CodeSnippetStatement($"\t\t\tL.BeginEnum(\"{enumType.Name}\");"));
             foreach (var enumName in enumNames)
             {
-                registerMethodStatement.Add(new CodeSnippetStatement($"\t\t\tL.RegVar({enumName}, get_{enumName}, null);"));
+                registerMethodStatement.Add(new CodeSnippetStatement($"\t\t\tL.RegVar(\"{enumName}\", get_{enumName}, null);"));
             }
             registerMethodStatement.Add(new CodeSnippetStatement($"\t\t\tL.EndEnum();"));
 
@@ -93,7 +93,7 @@ namespace UniToLuaGener
         private void GenRegEnum(CodeGener gener, Type enumType, string enumName)
         {
             gener.AddMemberMethod(typeof(int), $"get_{enumName}", new Dictionary<string, Type>() { { "L", typeof(ILuaState) } },
-                MemberAttributes.Private, new CodeSnippetStatement[]
+                MemberAttributes.Private | MemberAttributes.Static, new CodeSnippetStatement[]
                 {
                     new CodeSnippetStatement($"\t\t\tL.PushLightUserData({enumType.FullName}.{enumName});"),
                     new CodeSnippetStatement("\t\t\treturn 1;"),
@@ -101,7 +101,6 @@ namespace UniToLuaGener
         }
 
         #endregion
-
 
         #region StaticLib
 
@@ -114,7 +113,18 @@ namespace UniToLuaGener
 
             var fields = libType.GetFields(BindingFlags.Public | BindingFlags.Static);
             var propertys = libType.GetProperties(BindingFlags.Public | BindingFlags.Static);
-            var methods = libType.GetMethods(BindingFlags.Public | BindingFlags.Static);
+            var methods = libType.GetMethods(BindingFlags.Public | BindingFlags.Static).Where((method) =>
+            {
+                if (propertys.Count(prop => prop.GetMethod == method || prop.SetMethod == method) != 0)
+                {
+                    return false;
+                }
+                if (IsObsolete(method))
+                {
+                    return false;
+                }
+                return true;
+            }).ToArray();
 
             List<CodeStatement> registerMethodStatement = new List<CodeStatement>();
             registerMethodStatement.Add(new CodeSnippetStatement($"\t\t\tL.BeginStaticLib(\"{libType.Name}\");"));
@@ -186,13 +196,27 @@ namespace UniToLuaGener
             var className = classType.FullName?.Replace(".", "_") + "Wrap";
             CodeGener gener = new CodeGener("UniToLua", className);
 
+            var baseClassName = classType.BaseType == typeof(System.Object) || classType.BaseType == null
+                ? "null"
+                : classType.BaseType.FullName;
             var fields = classType.GetFields();
             var propertys = classType.GetProperties();
-            var methods = classType.GetMethods();
+            var methods = classType.GetMethods().Where((method) =>
+            {
+                if (propertys.Count(prop => prop.GetMethod == method || prop.SetMethod == method) != 0)
+                {
+                    return false;
+                }
+                if (IsObsolete(method))
+                {
+                    return false;
+                }
+                return true;
+            }).ToArray();
 
             List<CodeStatement> registerMethodStatement = new List<CodeStatement>();
 
-            registerMethodStatement.Add(new CodeSnippetStatement($"\t\t\tL.BeginClass(\"{classType.Name}\");"));
+            registerMethodStatement.Add(new CodeSnippetStatement($"\t\t\tL.BeginClass(typeof({classType.FullName}), {baseClassName});"));
 
             registerMethodStatement.Add(new CodeSnippetStatement($"\t\t\tL.RegFunction(\"New\", _Create{classType.Name});"));
 
@@ -287,6 +311,14 @@ namespace UniToLuaGener
         {
             //TODO
             var constructorInfos = type.GetConstructors();
+            var temp = new List<CodeStatement>()
+            {
+                new CodeSnippetStatement($"\t\t\tL.{GetPushString(type)}(new {type.FullName}())"),
+                new CodeSnippetStatement($"\t\t\treturn 1;"),
+            };
+
+            gener.AddMemberMethod(typeof(int), $"_Create{type.Name}",
+                new Dictionary<string, Type>() { { "L", typeof(ILuaState) } }, MemberAttributes.Private | MemberAttributes.Static, temp.ToArray());
         }
 
         private void GenRegStaticField(CodeGener gener, Type type, FieldInfo fieldInfo)
@@ -364,7 +396,7 @@ namespace UniToLuaGener
                 {
                     paramBuilder.Append(", ");
                 }
-                paramBuilder.Append(paramInfo.Name);
+                paramBuilder.Append($"arg{i}");
             }
 
             if (methodInfo.ReturnType == typeof(void))
@@ -455,7 +487,7 @@ namespace UniToLuaGener
             {
                 var paramInfo = paramInfos[i - 1];
                 temp.Add(new CodeSnippetStatement(
-                    $"\t\t\tvar arg{i + 1} = L.{GetCheckString(paramInfo.ParameterType)}({i + 1});"));
+                    $"\t\t\tvar arg{i} = L.{GetCheckString(paramInfo.ParameterType)}({i + 1});"));
             }
 
             var paramBuilder = new StringBuilder();
@@ -466,7 +498,7 @@ namespace UniToLuaGener
                 {
                     paramBuilder.Append(", ");
                 }
-                paramBuilder.Append(paramInfo.Name);
+                paramBuilder.Append($"arg{i}");
             }
 
             if (methodInfo.ReturnType == typeof(void))
@@ -506,6 +538,24 @@ namespace UniToLuaGener
             return $"CheckValue<{type.FullName}>";
         }
 
+
+        private bool IsObsolete(MemberInfo mb)
+        {
+            object[] attrs = mb.GetCustomAttributes(true);
+
+            for (int j = 0; j < attrs.Length; j++)
+            {
+                Type t = attrs[j].GetType();
+
+                if (t == typeof(System.ObsoleteAttribute) || t == typeof(NoToLuaAttribute) ||
+                    t.Name == "MonoNotSupportedAttribute" || t.Name == "MonoTODOAttribute") // || t.ToString() == "UnityEngine.WrapperlessIcall")
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
         
     }
 }
